@@ -1,0 +1,16 @@
+{
+  "timeline": { "start": 1, "end": 24, "fps": 24 },
+  "parameters": { "spin": "frame * 15" },
+  "nodes": {
+    "ground": { "type": "grid", "params": { "size": [14, 8], "columns": 14, "rows": 8 } },
+    "box": { "type": "box", "params": { "size": [1.5, 1.5, 1.5], "center": [-5, 0.75, 0] } },
+    "box_spin": { "type": "transform", "inputs": ["box"], "params": { "rotate": [0, "spin", 0], "pivot": [-5, 0, 0] } },
+    "ball": { "type": "sphere", "params": { "radius": 1, "center": [-2, 1, 0] } },
+    "can": { "type": "cylinder", "params": { "radius": 0.8, "height": 2, "center": [1, 1, 0] } },
+    "ring_profile": { "type": "circle", "params": { "radius": 0.35, "segments": 16, "plane": "xy", "output": "polyline", "center": [1.1, 0, 0] } },
+    "ring": { "type": "revolve", "inputs": ["ring_profile"], "params": { "divisions": 32 } },
+    "ring_placed": { "type": "transform", "inputs": ["ring"], "params": { "translate": [4.5, 1.2, 0], "rotate": ["spin", 0, 0] } },
+    "scene": { "type": "merge", "inputs": ["ground", "box_spin", "ball", "can", "ring_placed"] }
+  },
+  "output": "scene"
+}

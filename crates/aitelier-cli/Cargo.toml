@@ -1,0 +1,18 @@
+[package]
+name = "aitelier-cli"
+description = "Command-line tool: cook graphs, export geometry"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "aitelier"
+path = "src/main.rs"
+
+[dependencies]
+aitelier-geo.workspace = true
+aitelier-graph.workspace = true
+aitelier-render.workspace = true
+serde_json.workspace = true
+indexmap.workspace = true
+clap.workspace = true

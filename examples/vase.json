@@ -1,0 +1,38 @@
+{
+  "timeline": { "start": 1, "end": 48, "fps": 24 },
+  "parameters": {
+    "height": 24,
+    "base_r": 4,
+    "belly_r": { "keys": [[1, 7], [24, 10], [48, 7]] },
+    "belly_h": 0.35,
+    "neck_r": 2.6,
+    "neck_h": 0.8,
+    "lip_r": 3.6,
+    "wall": 0.45,
+    "base_thick": 0.8
+  },
+  "nodes": {
+    "profile": {
+      "type": "curve",
+      "params": {
+        "points": [
+          [0, 0, 0],
+          ["base_r", 0, 0],
+          ["belly_r", "height * belly_h", 0],
+          ["neck_r", "height * neck_h", 0],
+          ["lip_r", "height", 0],
+          ["lip_r - wall", "height", 0],
+          ["neck_r - wall", "height * neck_h", 0],
+          ["belly_r - wall", "height * belly_h", 0],
+          ["base_r - wall", "base_thick", 0],
+          [0, "base_thick", 0]
+        ],
+        "smooth": "catmull",
+        "resolution": 10,
+        "sharp": [1, 4, 5, 8]
+      }
+    },
+    "vase": { "type": "revolve", "inputs": ["profile"], "params": { "divisions": 64 } }
+  },
+  "output": "vase"
+}

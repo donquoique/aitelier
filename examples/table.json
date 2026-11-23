@@ -1,0 +1,21 @@
+{
+  "timeline": { "start": 1, "end": 1, "fps": 24 },
+  "parameters": {
+    "width": 12,
+    "depth": 7,
+    "height": 7.5,
+    "top_thick": 0.4,
+    "leg_r": 0.3,
+    "inset": 0.8
+  },
+  "nodes": {
+    "top": { "type": "box", "params": { "size": ["width", "top_thick", "depth"], "center": [0, "height - top_thick / 2", 0] } },
+    "leg": { "type": "cylinder", "params": { "radius": "leg_r", "height": "height - top_thick", "columns": 24, "center": [0, "(height - top_thick) / 2", 0] } },
+    "leg_fl": { "type": "transform", "inputs": ["leg"], "params": { "translate": ["width / 2 - inset", 0, "depth / 2 - inset"] } },
+    "leg_fr": { "type": "transform", "inputs": ["leg"], "params": { "translate": ["-(width / 2 - inset)", 0, "depth / 2 - inset"] } },
+    "leg_bl": { "type": "transform", "inputs": ["leg"], "params": { "translate": ["width / 2 - inset", 0, "-(depth / 2 - inset)"] } },
+    "leg_br": { "type": "transform", "inputs": ["leg"], "params": { "translate": ["-(width / 2 - inset)", 0, "-(depth / 2 - inset)"] } },
+    "table": { "type": "merge", "inputs": ["top", "leg_fl", "leg_fr", "leg_bl", "leg_br"] }
+  },
+  "output": "table"
+}

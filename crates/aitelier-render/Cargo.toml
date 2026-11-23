@@ -1,0 +1,11 @@
+[package]
+name = "aitelier-render"
+description = "CPU preview renderer: shaded viewport images, depth, PNG output"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+aitelier-geo.workspace = true
+glam.workspace = true
+png = "0.18"

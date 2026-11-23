@@ -1,0 +1,9 @@
+[package]
+name = "aitelier-anim"
+description = "Timeline, keyframes and animation channels"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
