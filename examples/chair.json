@@ -1,0 +1,26 @@
+{
+  "parameters": {
+    "seat_w": 4.4,
+    "seat_d": 4.2,
+    "seat_h": 4.5,
+    "seat_t": 0.35,
+    "leg_r": 0.17,
+    "inset": 0.35,
+    "back_h": 4.5,
+    "slats": 5
+  },
+  "nodes": {
+    "seat_shape": { "type": "rectangle", "params": { "size": ["seat_w", "seat_d"], "corner_radius": 0.3, "center": [0, "seat_h - seat_t", 0] } },
+    "seat": { "type": "extrude", "inputs": ["seat_shape"], "params": { "depth": "seat_t" } },
+    "leg": { "type": "cylinder", "params": { "radius": "leg_r", "height": "seat_h - seat_t", "columns": 20, "center": [0, "(seat_h - seat_t) / 2", 0] } },
+    "leg_spots": { "type": "rectangle", "params": { "size": ["seat_w - 2 * inset", "seat_d - 2 * inset"] } },
+    "legs": { "type": "copy_to_points", "inputs": ["leg", "leg_spots"] },
+    "post": { "type": "cylinder", "params": { "radius": "leg_r", "height": "back_h", "columns": 20, "center": ["seat_w / 2 - inset", "seat_h + back_h / 2", "-(seat_d / 2 - inset)"] } },
+    "posts": { "type": "mirror", "inputs": ["post"], "params": { "axis": "x" } },
+    "top_rail": { "type": "box", "params": { "size": ["seat_w - 2 * inset", 0.5, 0.25], "center": [0, "seat_h + back_h - 0.35", "-(seat_d / 2 - inset)"] } },
+    "slat": { "type": "box", "params": { "size": [0.14, "back_h - 0.6", 0.12], "center": ["-(slats - 1) / 2 * 0.6", "seat_h + (back_h - 0.6) / 2", "-(seat_d / 2 - inset)"] } },
+    "slat_row": { "type": "array", "inputs": ["slat"], "params": { "count": "slats", "offset": [0.6, 0, 0] } },
+    "chair": { "type": "merge", "inputs": ["seat", "legs", "posts", "top_rail", "slat_row"] }
+  },
+  "output": "chair"
+}

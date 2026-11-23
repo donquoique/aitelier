@@ -6,7 +6,9 @@
 //! primitives or the whole geometry (detail).
 
 pub mod attrib;
+pub mod csg;
 pub mod geometry;
+pub mod mesh_ops;
 pub mod obj;
 
 pub use attrib::{AttribArray, AttribKind, AttribValue};

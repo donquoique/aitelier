@@ -7,8 +7,8 @@
 | 1 | Geometry core: points, prims, attributes, groups, transforms, bounds, normals, topology check | **done (M1)** |
 | 2 | Node graph engine: DAG, parameters, cooking + caching, JSON format, expressions | **done (M1)**; node groups (subgraphs) to do |
 | 3 | Basic shapes: box, grid, sphere, cylinder, circle, curve | **done (M1)**; torus, line to do |
-| 4 | Modeling operators: revolve, transform, merge | **done (M1)**; thicken, extrude, sweep, boolean (Manifold), subdivide, smooth, mirror, delete by group to do |
-| 5 | Instancing: copy to points, array, scatter | to do |
+| 4 | Modeling operators | **done**: revolve, transform, merge, extrude, sweep, boolean (own BSP implementation), mirror; to do: thicken, subdivide, smooth, delete by group |
+| 5 | Instancing | **done**: copy to points, array; to do: scatter |
 | 6 | Attributes and logic: set/randomize attributes, noise, switch, repeat/for-each, script node (Rhai) | expressions done; rest to do |
 | 7 | UVs and materials: projections, PBR material, procedural textures, image textures | revolve/primitive UVs done; rest to do |
 | 8 | Scene: camera, lights, environment map, background | to do |

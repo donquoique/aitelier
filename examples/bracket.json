@@ -1,0 +1,18 @@
+{
+  "parameters": {
+    "length": 8,
+    "width": 4,
+    "thick": 0.5,
+    "hole_r": 0.4,
+    "margin": 1.0
+  },
+  "nodes": {
+    "outline": { "type": "rectangle", "params": { "size": ["length", "width"], "corner_radius": 0.6, "corner_segments": 8 } },
+    "plate": { "type": "extrude", "inputs": ["outline"], "params": { "depth": "thick" } },
+    "pin": { "type": "cylinder", "params": { "radius": "hole_r", "height": "thick * 4", "columns": 32 } },
+    "hole_spots": { "type": "rectangle", "params": { "size": ["length - 2 * margin", "width - 2 * margin"] } },
+    "pins": { "type": "copy_to_points", "inputs": ["pin", "hole_spots"] },
+    "drilled": { "type": "boolean", "inputs": ["plate", "pins"], "params": { "operation": "subtract" } }
+  },
+  "output": "drilled"
+}

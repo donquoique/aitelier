@@ -1,6 +1,8 @@
 //! Built-in nodes.
 
+mod copies;
 mod curve;
+mod modeling;
 mod ops;
 mod prims;
 mod revolve;
@@ -18,6 +20,13 @@ pub fn register_builtins(r: &mut Registry) {
     r.register(Box::new(ops::TransformNode::new()));
     r.register(Box::new(ops::MergeNode::new()));
     r.register(Box::new(ops::NormalNode::new()));
+    r.register(Box::new(modeling::RectangleNode::new()));
+    r.register(Box::new(modeling::ExtrudeNode::new()));
+    r.register(Box::new(modeling::BooleanNode::new()));
+    r.register(Box::new(modeling::SweepNode::new()));
+    r.register(Box::new(copies::CopyToPointsNode::new()));
+    r.register(Box::new(copies::ArrayNode::new()));
+    r.register(Box::new(copies::MirrorNode::new()));
 }
 
 /// Implements the boilerplate parts of [`crate::NodeType`].

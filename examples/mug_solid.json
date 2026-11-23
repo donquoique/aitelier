@@ -1,0 +1,31 @@
+{
+  "parameters": {
+    "radius": 4,
+    "height": 9,
+    "wall": 0.4,
+    "bottom": 0.6,
+    "handle_reach": 2.2,
+    "handle_thick": 0.45
+  },
+  "nodes": {
+    "body_profile": {
+      "type": "curve",
+      "params": {
+        "points": [[0, 0, 0], ["radius - 0.3", 0, 0], ["radius", 0.4, 0], ["radius", "height", 0], ["radius - wall", "height", 0], ["radius - wall", "bottom", 0], [0, "bottom", 0]],
+        "smooth": "catmull", "resolution": 6, "sharp": [1, 3, 4, 5]
+      }
+    },
+    "body": { "type": "revolve", "inputs": ["body_profile"], "params": { "divisions": 64 } },
+    "handle_section": { "type": "circle", "params": { "radius": "handle_thick", "segments": 16, "plane": "xy", "output": "polyline" } },
+    "handle_path": {
+      "type": "curve",
+      "params": {
+        "points": [["radius - 0.2", "height * 0.78", 0], ["radius + handle_reach * 0.8", "height * 0.76", 0], ["radius + handle_reach", "height * 0.5", 0], ["radius + handle_reach * 0.7", "height * 0.26", 0], ["radius - 0.2", "height * 0.24", 0]],
+        "smooth": "catmull", "resolution": 8
+      }
+    },
+    "handle": { "type": "sweep", "inputs": ["handle_section", "handle_path"] },
+    "mug": { "type": "boolean", "inputs": ["body", "handle"], "params": { "operation": "union" } }
+  },
+  "output": "mug"
+}

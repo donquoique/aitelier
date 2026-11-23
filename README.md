@@ -127,8 +127,15 @@ Nodes that do not depend on time are cooked once and cached; animated nodes are 
 | `sphere` | 0 | UV sphere, watertight |
 | `cylinder` | 0 | Cylinder, watertight when capped |
 | `circle` | 0 | Filled circle or closed outline |
+| `rectangle` | 0 | Rectangle with optional rounded corners |
 | `curve` | 0 | Polyline through points, optional smoothing with sharp corners |
 | `revolve` | 1 | Lathe a profile around an axis; profiles that start and end on the axis give watertight solids |
+| `extrude` | 1 | Closed shapes into solids (with taper), open curves into walls |
+| `sweep` | 2 | Profile (input 1, drawn in XY) along a path (input 2): pipes, handles, rails |
+| `boolean` | 2 | Union / subtract / intersect two solids |
+| `copy_to_points` | 2 | A copy of input 1 on every point of input 2 |
+| `array` | 1 | Copies in a row or around an axis |
+| `mirror` | 1 | Mirror across a plane, keeping the original |
 | `transform` | 1 | Translate / rotate / scale around a pivot |
 | `merge` | 1+ | Combine inputs |
 | `normal` | 1 | Recompute normals with a hard-edge angle |
@@ -146,7 +153,7 @@ crates/aitelier-cli     the `aitelier` command
 crates/aitelier-gui     the `aitelier-editor` program (icon in assets/)
 create-shortcuts.bat   Desktop / Start-menu shortcuts on Windows
 update-aitelier.bat    download + build + install the latest version
-examples/              vase.json (animated), mug.json, table.json, primitives.json
+examples/              vase (animated), mug, mug_solid (sweep + boolean), table, chair, bracket (holes), primitives
 docs/ROADMAP.md        what comes next
 ```
 

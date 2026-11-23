@@ -204,9 +204,14 @@ pub fn render(geo: &Geometry, cam: &Camera, s: &RenderSettings) -> Image {
                 .unwrap_or(face_n);
             (p, n)
         };
-        let c0 = corner(0);
-        for k in 1..pr.points.len() - 1 {
-            let tri = [c0, corner(k), corner(k + 1)];
+        let tris: Vec<[usize; 3]> = if pr.points.len() == 3 {
+            vec![[0, 1, 2]]
+        } else {
+            let pts: Vec<Vec3> = pr.points.iter().map(|&p| geo.points[p as usize]).collect();
+            aitelier_geo::mesh_ops::triangulate(&pts)
+        };
+        for [a, b, c] in tris {
+            let tri = [corner(a), corner(b), corner(c)];
             for poly in clip_near(&tri, &vp, near) {
                 raster_triangle(&mut t, &poly, eye, key, fill, s.base_color);
             }
