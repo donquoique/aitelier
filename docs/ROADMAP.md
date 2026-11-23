@@ -15,6 +15,7 @@
 | 9 | Renderer (wgpu, headless): color, depth, normals, object mask | to do |
 | 10 | Data generator: parameter sampling with seeds, domain randomization, batch runs, JSON labels, split by shape | `--set` overrides done; rest to do |
 | 11 | Import/export: OBJ export done; glTF export/import, graph save/load | partly done |
+| 12b | Asset library: built-in examples + My library, thumbnails, open / insert / save / delete | **done** |
 | 12 | Editor GUI: node editor, parameter panel with keyframes, viewport, timeline, undo | **done (M2)**; GPU viewport, curve editor, node groups UI to do |
 | A | Animation: timeline, keyframes on any parameter, bezier/linear/constant/ease, time in expressions, per-frame cache, frame-sequence export | **done (M1)**; camera presets, per-frame labels with rendering to do |
 

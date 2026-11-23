@@ -257,6 +257,160 @@ pub fn cook_key(graph: &Graph) -> Graph {
     g
 }
 
+/// Rename identifiers in an expression (e.g. `height * 0.5` -> `vase_height * 0.5`).
+pub fn rename_identifiers(src: &str, map: &std::collections::HashMap<String, String>) -> String {
+    let mut out = String::with_capacity(src.len());
+    let mut word = String::new();
+    let flush = |word: &mut String, out: &mut String| {
+        if !word.is_empty() {
+            match map.get(word.as_str()) {
+                Some(new) if !word.starts_with(|c: char| c.is_ascii_digit()) => out.push_str(new),
+                _ => out.push_str(word),
+            }
+            word.clear();
+        }
+    };
+    for c in src.chars() {
+        if c.is_ascii_alphanumeric() || c == '_' {
+            word.push(c);
+        } else {
+            flush(&mut word, &mut out);
+            out.push(c);
+        }
+    }
+    flush(&mut word, &mut out);
+    out
+}
+
+fn rename_in_value(v: &mut Value, map: &std::collections::HashMap<String, String>) {
+    match v {
+        Value::Str(s) => *s = rename_identifiers(s, map),
+        Value::Expr(e) => e.expr = rename_identifiers(&e.expr, map),
+        Value::List(items) => items.iter_mut().for_each(|i| rename_in_value(i, map)),
+        _ => {}
+    }
+}
+
+/// Turn any text into a safe name part: lowercase letters, digits and underscores.
+pub fn slug(name: &str) -> String {
+    let s: String = name
+        .trim()
+        .to_lowercase()
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect();
+    let s = s.trim_matches('_').to_string();
+    if s.is_empty() || s.starts_with(|c: char| c.is_ascii_digit()) {
+        format!("asset_{s}")
+    } else {
+        s
+    }
+}
+
+/// Copy another graph's nodes and parameters into `target`, prefixing their names so
+/// nothing clashes. Expressions are updated to the new parameter names. The copied
+/// nodes are placed to the right of the existing ones. Returns the copied output node.
+pub fn insert_graph(
+    target: &mut Graph,
+    asset: &Graph,
+    prefix: &str,
+    registry: &Registry,
+) -> Option<String> {
+    use std::collections::HashMap;
+    let prefix = slug(prefix);
+
+    let mut param_map: HashMap<String, String> = HashMap::new();
+    for name in asset.parameters.keys() {
+        let mut new = format!("{prefix}_{name}");
+        let mut i = 1;
+        while target.parameters.contains_key(&new) || param_map.values().any(|v| *v == new) {
+            new = format!("{prefix}_{name}{i}");
+            i += 1;
+        }
+        param_map.insert(name.clone(), new);
+    }
+    for (name, value) in &asset.parameters {
+        let mut v = value.clone();
+        rename_in_value(&mut v, &param_map);
+        target.parameters.insert(param_map[name].clone(), v);
+    }
+
+    let mut node_map: HashMap<String, String> = HashMap::new();
+    for name in asset.nodes.keys() {
+        let mut new = unique_name(target, &format!("{prefix}_{name}"));
+        let mut i = 1;
+        while node_map.values().any(|v| *v == new) {
+            new = unique_name(target, &format!("{prefix}_{name}{i}"));
+            i += 1;
+        }
+        node_map.insert(name.clone(), new);
+    }
+
+    // place to the right of what is already there
+    let mut asset_sorted = asset.clone();
+    auto_layout(&mut asset_sorted);
+    let right = target
+        .nodes
+        .values()
+        .filter_map(|s| s.ui.map(|u| u.pos[0]))
+        .fold(f32::MIN, f32::max);
+    let top = target
+        .nodes
+        .values()
+        .filter_map(|s| s.ui.map(|u| u.pos[1]))
+        .fold(f32::MAX, f32::min);
+    let a_left = asset_sorted
+        .nodes
+        .values()
+        .filter_map(|s| s.ui.map(|u| u.pos[0]))
+        .fold(f32::MAX, f32::min);
+    let a_top = asset_sorted
+        .nodes
+        .values()
+        .filter_map(|s| s.ui.map(|u| u.pos[1]))
+        .fold(f32::MAX, f32::min);
+    let (dx, dy) = if target.nodes.is_empty() {
+        (-a_left, -a_top)
+    } else {
+        (right + 240.0 - a_left, top - a_top)
+    };
+
+    for (name, spec) in &asset_sorted.nodes {
+        let mut s = spec.clone();
+        s.inputs = s
+            .inputs
+            .iter()
+            .map(|i| node_map.get(i).cloned().unwrap_or_else(|| i.clone()))
+            .collect();
+        let defs = registry
+            .get(&s.kind)
+            .map(|t| t.params().to_vec())
+            .unwrap_or_default();
+        for (pname, v) in s.params.iter_mut() {
+            let literal = defs.iter().find(|d| d.name == pname).is_some_and(|d| {
+                matches!(
+                    d.kind,
+                    aitelier_graph::ParamKind::Menu | aitelier_graph::ParamKind::Str
+                )
+            });
+            if !literal {
+                rename_in_value(v, &param_map);
+            }
+        }
+        if let Some(ui) = s.ui.as_mut() {
+            ui.pos = [ui.pos[0] + dx, ui.pos[1] + dy];
+        }
+        target.nodes.insert(node_map[name].clone(), s);
+    }
+    let out = node_map.get(&asset.output).cloned();
+    if !target.nodes.contains_key(&target.output) {
+        if let Some(o) = &out {
+            target.output = o.clone();
+        }
+    }
+    out
+}
+
 /// A new graph with a single box.
 pub fn starter_graph() -> Graph {
     let mut g = Graph::from_json(
@@ -282,6 +436,43 @@ mod tests {
         remove_key(&mut v, 1.0, 6.0);
         remove_key(&mut v, 10.0, 6.0);
         assert_eq!(v, Value::Num(6.0));
+    }
+
+    #[test]
+    fn insert_renames_nodes_and_parameters() {
+        let reg = Registry::with_builtins();
+        let asset = Graph::from_json(
+            r#"{"parameters": {"h": 2, "w": "h * 2"},
+            "nodes": {"b": {"type": "box", "params": {"size": ["w", "h", 1]}},
+                      "c": {"type": "circle", "params": {"plane": "xy", "radius": "h"}},
+                      "m": {"type": "merge", "inputs": ["b", "c"]}}, "output": "m"}"#,
+        )
+        .unwrap();
+        let mut g = starter_graph();
+        let out = insert_graph(&mut g, &asset, "My Chair", &reg).unwrap();
+        assert_eq!(out, "my_chair_m");
+        assert_eq!(
+            g.parameters["my_chair_w"],
+            Value::Str("my_chair_h * 2".into())
+        );
+        assert_eq!(
+            g.nodes["my_chair_m"].inputs,
+            vec!["my_chair_b".to_string(), "my_chair_c".to_string()]
+        );
+        assert_eq!(
+            g.nodes["my_chair_c"].params["plane"],
+            Value::Str("xy".into()),
+            "menu values are not renamed"
+        );
+        assert_eq!(
+            g.nodes["my_chair_c"].params["radius"],
+            Value::Str("my_chair_h".into())
+        );
+        assert_eq!(g.output, "box", "existing output kept");
+        // inserting twice does not clash
+        let out2 = insert_graph(&mut g, &asset, "My Chair", &reg).unwrap();
+        assert_ne!(out, out2);
+        assert!(aitelier_graph::cook::validate(&g, &reg).is_ok());
     }
 
     #[test]

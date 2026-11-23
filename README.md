@@ -60,6 +60,8 @@ the debug build's viewport is much slower.
 | **Parameters** (right) | The selected node's parameters, then the **graph parameters**. Drag numbers or click to type. **◇/◆** sets or removes a keyframe at the current frame. **ƒ** switches between a number and an expression. Right-click any number for more options. Yellow = key on this frame, green = animated, blue text = expression. |
 | **Timeline** (bottom) | **Space** play/pause, **←/→** step, **Home** start. Click or drag the track to scrub. Diamonds show keyframes of the graph parameters and the selected node. |
 
+| **Library** (tab next to Parameters) | Thumbnails of the built-in examples and of **My library** (your own models, kept in `Documents\AItelier\Library`, untouched by updates). Select a model, then **Open** it, or **Insert into scene**: its nodes are added with a `…_place` transform beside your model and merged into the output. Type a name and **Save** to put the current graph in My library. |
+
 **Ctrl+S** save, **Ctrl+O** open, **Ctrl+Z / Ctrl+Y** undo/redo. *File* also has
 *Export OBJ* (current frame) and *Render PNG* (current view, 1920×1080).
 

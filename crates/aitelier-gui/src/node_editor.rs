@@ -364,7 +364,10 @@ impl App {
         // --- apply node actions
         for a in actions {
             match a {
-                Action::Select(n) => self.selected = Some(n),
+                Action::Select(n) => {
+                    self.selected = Some(n);
+                    self.right_tab = crate::app::RightTab::Parameters;
+                }
                 Action::Move(n, d) => {
                     if let Some(ui) = self.graph.nodes.get_mut(&n).and_then(|s| s.ui.as_mut()) {
                         ui.pos[0] += d.x;
@@ -430,7 +433,7 @@ impl App {
         let size = (hi - lo).max(vec2(1.0, 1.0));
         let zoom = ((rect.width() - 80.0) / size.x)
             .min((rect.height() - 80.0) / size.y)
-            .clamp(0.4, 1.2);
+            .clamp(0.5, 1.2);
         self.editor.zoom = zoom;
         self.editor.pan = rect.size() * 0.5 - (lo + size * 0.5) * zoom;
     }

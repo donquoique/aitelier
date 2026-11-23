@@ -4,6 +4,7 @@
 
 mod app;
 mod edit;
+mod library;
 mod node_editor;
 mod params;
 mod timeline;

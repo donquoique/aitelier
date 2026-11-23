@@ -5,10 +5,11 @@ use std::sync::Arc;
 
 use aitelier_geo::Geometry;
 use aitelier_graph::{Cooker, Evaluator, Graph, Registry};
-use egui::{Key, KeyboardShortcut, Modifiers};
+use egui::{Key, KeyboardShortcut, Modifiers, RichText};
 use indexmap::IndexMap;
 
 use crate::edit;
+use crate::library::Library;
 use crate::node_editor::EditorView;
 use crate::viewport::ViewportState;
 
@@ -18,6 +19,12 @@ const UNDO_LIMIT: usize = 200;
 pub struct CookError {
     pub node: Option<String>,
     pub message: String,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum RightTab {
+    Parameters,
+    Library,
 }
 
 pub struct App {
@@ -52,9 +59,13 @@ pub struct App {
     pub vars: IndexMap<String, f64>,
 
     // panels
+    pub library: Library,
+    pub right_tab: RightTab,
     pub editor: EditorView,
     pub viewport: ViewportState,
     pub status: String,
+    /// Frame the viewport on the next successful cook (after inserting a model).
+    pub frame_after_cook: bool,
     title: String,
 }
 
@@ -86,9 +97,12 @@ impl App {
             result_key: None,
             error: None,
             vars: IndexMap::new(),
+            library: Library::new(),
+            right_tab: RightTab::Parameters,
             editor: EditorView::default(),
             viewport: ViewportState::default(),
             status: "Right-click in the node editor to add nodes.".into(),
+            frame_after_cook: false,
             title: String::new(),
         };
         if let Some(p) = path {
@@ -99,7 +113,7 @@ impl App {
 
     // ------------------------------------------------------------------ files
 
-    fn set_document(&mut self, graph: Graph, path: Option<PathBuf>) {
+    pub fn set_document(&mut self, graph: Graph, path: Option<PathBuf>) {
         let mut graph = graph;
         edit::auto_layout(&mut graph);
         self.saved = graph.clone();
@@ -307,6 +321,10 @@ impl App {
         }
         match cooker.cook(&target, self.frame) {
             Ok(g) => {
+                if self.frame_after_cook {
+                    self.viewport.frame_all(Some(&g));
+                    self.frame_after_cook = false;
+                }
                 self.result = Some(g);
                 self.error = None;
             }
@@ -408,6 +426,12 @@ impl App {
                 if ui.button("Save As…    Ctrl+Shift+S").clicked() {
                     self.save(true);
                 }
+                if ui.button("Save to Library…").clicked() {
+                    self.right_tab = RightTab::Library;
+                    if let Some(stem) = self.path.as_ref().and_then(|p| p.file_stem()) {
+                        self.library.save_name = stem.to_string_lossy().to_string();
+                    }
+                }
                 ui.separator();
                 if ui.button("Export OBJ (current frame)…").clicked() {
                     self.export_obj();
@@ -504,6 +528,10 @@ Parameters
 Viewport
   Left-drag: orbit.  Right/middle-drag or Shift+drag: pan.  Scroll: zoom.  F: frame
 
+Library (tab next to Parameters)
+  Click a model to select it. Open replaces the current graph; Insert adds its nodes.
+  Save the current graph under a name to keep it in My library (Documents/AItelier/Library).
+
 Timeline
   Space: play/pause.  Left/Right arrows: step.  Home: go to start";
 
@@ -534,9 +562,26 @@ impl eframe::App for App {
             .default_size(360.0)
             .min_size(260.0)
             .show(ui, |ui| {
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    ui.selectable_value(
+                        &mut self.right_tab,
+                        RightTab::Parameters,
+                        RichText::new("Parameters").strong(),
+                    );
+                    ui.selectable_value(
+                        &mut self.right_tab,
+                        RightTab::Library,
+                        RichText::new("Library").strong(),
+                    );
+                });
+                ui.separator();
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
-                    .show(ui, |ui| self.params_ui(ui));
+                    .show(ui, |ui| match self.right_tab {
+                        RightTab::Parameters => self.params_ui(ui),
+                        RightTab::Library => self.library_ui(ui),
+                    });
             });
         egui::Panel::left("nodes")
             .resizable(true)
